@@ -362,7 +362,6 @@ function muxAnalytics() as Object
           m._Flag_RebufferingStarted = false
         end if
       end if
-      m._addEventToQueue(m._createEvent("play"))
       m._addEventToQueue(m._createEvent("playing"))
       m._Flag_isSeeking = false
       m._Flag_atLeastOnePlayEventForContent = true
@@ -394,9 +393,20 @@ function muxAnalytics() as Object
     end if
   end function
 
+  prototype._triggerPlayEvent = function()
+    if m.video <> Invalid
+      if m.video.content <> Invalid
+        m._videoContentProperties = m._getVideoContentProperties(m.video.content)
+      end if
+      m._videoProperties = m._getVideoProperties(m.video)
+    end if
+    m._addEventToQueue(m._createEvent("play"))
+  end function
+
   prototype.videoControlChangeHandler = function(control as String)
     if control = "play"
       m._startView()
+      m._triggerPlayEvent()
     else if control = "stop"
       m._endView()
     end if
