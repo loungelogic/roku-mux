@@ -362,6 +362,9 @@ function muxAnalytics() as Object
           m._Flag_RebufferingStarted = false
         end if
       end if
+      if m._Flag_lastVideoState = "paused"
+        m._addEventToQueue(m._createEvent("play"))
+      end if
       m._addEventToQueue(m._createEvent("playing"))
       m._Flag_isSeeking = false
       m._Flag_atLeastOnePlayEventForContent = true
