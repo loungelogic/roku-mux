@@ -39,7 +39,6 @@ function setupContent()
   end for
   m.list.content = listContent
 
-  m.video.observeField("state", "videoStateChangeHandler")
   m.loading = m.top.FindNode("LoadingScreen")
   m.loadingText = m.loading.findNode("LoadingScreenText")
 end function

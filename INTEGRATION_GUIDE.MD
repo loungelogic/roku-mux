@@ -266,4 +266,4 @@ If the value is set to `soft` then the thread sends all the remaining data to th
 
 To change value to `soft` call `m.mux.setField("exitType", "soft")`
 
-NOTE: This means that there might be a time difference between you calling `mux.exit=true` and the task thread actually terminating. Please ensure you have a single `Task` running at any given time.
+NOTE: This means that there might be a time difference between you calling `mux.exit=true` and the task thread actually terminating. Please ensure you have a single `MUX Task` running at any given time.
