@@ -563,7 +563,7 @@ function muxAnalytics() as Object
   end function
 
   prototype.isQueueEmpty = function() as Boolean
-    return m._eventQueue.count()
+    return m._eventQueue.count() = 0
   end function
 
   prototype.LIGHT_THE_BEACONS = function() as Object
