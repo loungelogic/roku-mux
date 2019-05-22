@@ -16,7 +16,7 @@ function init()
   m.list.wrapDividerBitmapUri = ""
   setupContent()
   m.list.observeField("itemSelected", "onItemSelected")
-  m.mux.observeField("state", "onStateChanged")
+  m.mux.observeField("state", "muxTaskStateChangeHandler")
   m.list.setFocus(true)
 end function
 
@@ -39,7 +39,7 @@ function setupContent()
   end for
   m.list.content = listContent
 
-  m.video.observeField("state", "stateChanged")
+  m.video.observeField("state", "videoStateChangeHandler")
   m.loading = m.top.FindNode("LoadingScreen")
   m.loadingText = m.loading.findNode("LoadingScreenText")
 end function
@@ -54,7 +54,7 @@ function onItemSelected()
 
   'Run task to playback with RAF
   m.PlayerTask = CreateObject("roSGNode", "PlayerTask")
-  m.PlayerTask.observeField("state", "taskStateChanged")
+  m.PlayerTask.observeField("state", "playbackTaskChangeHandler")
   selectedId = m.contentList[m.list.itemSelected].selectionID
   m.PlayerTask.selectionID = selectedId
   m.PlayerTask.video = m.video
@@ -62,7 +62,7 @@ function onItemSelected()
   m.PlayerTask.control = "RUN"
 end function
 
-sub taskStateChanged(msg as Object)
+sub playbackTaskChangeHandler(msg as Object)
   state = msg.GetData()
   if state = "done" or state = "stop"
     m.mux.setField("view", "end")
@@ -75,10 +75,10 @@ sub taskStateChanged(msg as Object)
   end if
 end sub
 
-sub onStateChanged(event as Object)
+sub muxTaskStateChangeHandler(event as Object)
   state = event.getData()
   if state = "done" or state = "stop"
-    m.mux.conrtol = "RUN"
+    m.mux.control = "RUN"
   end if
 end sub
 

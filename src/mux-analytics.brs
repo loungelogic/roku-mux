@@ -145,7 +145,7 @@ function runBeaconLoop()
   m.top.UnobserveField("view")
 
   if m.top.exitType = "soft"
-    while (NOT m.mxa._isQueueEmpty())
+    while (NOT m.mxa.isQueueEmpty())
       m.mxa.LIGHT_THE_BEACONS()
     end while
   end if
@@ -562,7 +562,7 @@ function muxAnalytics() as Object
     m._eventQueue.push(_event)
   end function
 
-  prototype._isQueueEmpty = function() as Boolean
+  prototype.isQueueEmpty = function() as Boolean
     return m._eventQueue.count()
   end function
 

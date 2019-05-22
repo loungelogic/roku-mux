@@ -257,10 +257,13 @@ mux.setField("view", "start")
 mux.setField("view", "end")
 ```
 
-The `exitType` field gives options for flushing the queue upon terminating the thread. This field can take two values: `hard` and `soft`. The default value is `hard`.
+The `exitType` controls the behaviour of the task when a request to exit/terminate the thread is invoked (via `mux.exit=true`).
+The default value of `exitType` is `hard`.
 
-When value is set to `hard` it's means that when the thread should be closed `mux.exit = true` it terminated instantly and the events in queue are lost.
+If the value is set to `hard` then the thread terminates immediately and any data that has not propagated already to the MUX servers is lost.
 
-When value is set to `soft` it's means that when the thread should be closed `mux.exit = true` then the queue is flushed immediately and the thread is closed.
+If the value is set to `soft` then the thread sends all the remaining data to the MUX servers and terminates afterwards.
 
 To change value to `soft` call `m.mux.setField("exitType", "soft")`
+
+NOTE: This means that there might be a time difference between you calling `mux.exit=true` and the task thread actually terminating. Please ensure you have a single `Task` running at any given time.
