@@ -10,11 +10,13 @@ function init()
   m.mux = m.top.FindNode("mux")
   m.mux.setField("video", m.video)
   m.mux.setField("config", muxConfig)
+  m.mux.setField("exitType", "soft")
   m.mux.control = "RUN"
   m.list = m.top.FindNode("MenuList")
   m.list.wrapDividerBitmapUri = ""
   setupContent()
   m.list.observeField("itemSelected", "onItemSelected")
+  m.mux.observeField("state", "onStateChanged")
   m.list.setFocus(true)
 end function
 
@@ -69,6 +71,14 @@ sub taskStateChanged(msg as Object)
     m.video.control = "stop"
     m.video.visible = false
     m.list.setFocus(true)
+    m.mux.exit = true
+  end if
+end sub
+
+sub onStateChanged(event as Object)
+  state = event.getData()
+  if state = "done" or state = "stop"
+    m.mux.conrtol = "RUN"
   end if
 end sub
 

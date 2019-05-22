@@ -23,6 +23,7 @@ Create a new `Task` XML named `MuxTask.xml` inside your `components` folder and 
     <field id="error" type="assocarray" alwaysNotify="true"/>
     <field id="view" type="String" alwaysNotify="true"/>
     <field id="exit" type="Boolean" alwaysNotify="true"/>
+    <field id="exitType" type="String" alwaysNotify="true" value="hard" />
   </interface>
   <script type="text/brightscript" uri="pkg:/libs/mux-analytics.brs"/>
 </component>
@@ -255,3 +256,11 @@ mux.setField("view", "start")
 ' To signal the end of a view:
 mux.setField("view", "end")
 ```
+
+The `exitType` field gives options for flushing the queue upon terminating the thread. This field can take two values: `hard` and `soft`. The default value is `hard`.
+
+When value is set to `hard` it's means that when the thread should be closed `mux.exit = true` it terminated instantly and the events in queue are lost.
+
+When value is set to `soft` it's means that when the thread should be closed `mux.exit = true` then the queue is flushed immediately and the thread is closed.
+
+To change value to `soft` call `m.mux.setField("exitType", "soft")`
