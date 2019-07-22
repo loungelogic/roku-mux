@@ -34,7 +34,7 @@ function runBeaconLoop()
   m.beaconTimer.duration = m.BASE_TIME_BETWEEN_BEACONS / 1000
   m.beaconTimer.control = "start"
 
-  m.mxa = muxAnalytics()
+  m.mxa = getAnalytics()
   m.mxa.MUX_SDK_VERSION = m.MUX_SDK_VERSION
 
   Print "[mux-analytics] running task loop"
@@ -83,9 +83,6 @@ function runBeaconLoop()
   running = true
   while(running)
     msg = wait(50, m.messagePort)
-    if m.top.exit = true
-      running = false
-    end if
     if msg <> Invalid
       msgType = type(msg)
       if msgType = "roSGNodeEvent"
@@ -129,6 +126,9 @@ function runBeaconLoop()
       else if msgType = "roUrlEvent"
         ' handleResponse(msg)
       end if
+    end if
+    if m.top.exit = true
+      running = false
     end if
   end while
   m.beaconTimer.control = "stop"
@@ -187,6 +187,10 @@ end function
 
 function _createRegistry() as Object
   return CreateObject("roRegistrySection", "mux")
+end function
+
+function getAnalytics() as Object
+  return muxAnalytics()
 end function
 
 function muxAnalytics() as Object
@@ -296,6 +300,7 @@ function muxAnalytics() as Object
 
     ' flags
     m._Flag_lastVideoState = "none"
+    m._Flag_isInAdBreak = false
     m._Flag_isPaused = false
     m._Flag_atLeastOnePlayEventForContent = false
     m._Flag_RebufferingStarted = false
@@ -350,9 +355,9 @@ function muxAnalytics() as Object
           end if
         end if
       end if
-    else if videoState = "paused"
+    else if videoState = "paused" AND NOT m._Flag_isInAdBreak
       m._addEventToQueue(m._createEvent("pause"))
-    else if videoState = "playing"
+    else if videoState = "playing" AND NOT m._Flag_isInAdBreak
       m._videoProperties = m._getVideoProperties(m.video)
       m._checkForSeek("playing")
       if m._Flag_atLeastOnePlayEventForContent = false
@@ -454,23 +459,24 @@ function muxAnalytics() as Object
     m._addEventToQueue(m._createEvent("error", {player_error_code: errorCode, player_error_message:errorMessage}))
   end function
 
-  prototype.rafEventHandler = function(rafEvent) as Void
-    data = rafEvent.getData()
+  prototype.rafEventHandler = function(rafEvent = {}) as Void
+    if type(rafEvent) = "roSGNodeEvent"
+      data = rafEvent.getData()
+    else
+      data = rafEvent
+    end if
     eventType = data.eventType
     m._Flag_isPaused = (eventType = "Pause")
     m._advertProperties = {}
     if eventType = "PodStart"
+      m._Flag_isInAdBreak = true
       m._advertProperties = m._getAdvertProperites(data.obj)
       m._addEventToQueue(m._createEvent("adbreakstart"))
     else if eventType = "PodComplete"
       m._addEventToQueue(m._createEvent("adbreakend"))
       m._Flag_FailedAdsErrorSet = false
+      m._Flag_isInAdBreak = false
     else if eventType = "Impression"
-      m._addEventToQueue(m._createEvent("adimpresion"))
-    else if eventType = "Pause"
-      m._addEventToQueue(m._createEvent("adpaused"))
-    else if eventType = "Resume"
-    else if eventType = "Start"
       if m._viewTimeToFirstFrame = Invalid
         if m._viewStartTimestamp <> Invalid AND m._viewStartTimestamp <> 0
           date = m._getDateTime()
@@ -478,6 +484,14 @@ function muxAnalytics() as Object
           m._viewTimeToFirstFrame = now - m._viewStartTimestamp
         end if
       end if
+      m._addEventToQueue(m._createEvent("adimpresion"))
+    else if eventType = "Pause"
+      m._addEventToQueue(m._createEvent("adpaused"))
+    else if eventType = "Resume"
+      m._advertProperties = m._getAdvertProperites(data.ctx)
+      m._addEventToQueue(m._createEvent("adplay"))
+      m._addEventToQueue(m._createEvent("adplaying"))
+    else if eventType = "Start"
       m._advertProperties = m._getAdvertProperites(data.ctx)
       m._addEventToQueue(m._createEvent("adplay"))
       m._addEventToQueue(m._createEvent("adplaying"))
@@ -508,49 +522,56 @@ function muxAnalytics() as Object
     end if
   end function
 
-  prototype.pollingIntervalHandler = function(pollingIntervalEvent)
-    if m.video <> Invalid
-      ' update total watched time. (ViewStart - now)
-      if m.video.state <> "paused"
-        if m._viewWatchTime <> Invalid
-          if m._viewStartTimestamp <> Invalid
-            date = m._getDateTime()
-            now = 0# + date.AsSeconds() * 1000.0# + date.GetMilliseconds()
-            m._viewWatchTime = now - m._viewStartTimestamp
-          end if
-        end if
-      end if
+  prototype.pollingIntervalHandler = function(pollingIntervalEvent) as Void
+    if m.video = Invalid then return
 
-      ' set buffering metrics
-      if m.video.state = "buffering"
-        if m._Flag_atLeastOnePlayEventForContent = true
-          if m._viewRebufferDuration <> Invalid
-            m._viewRebufferDuration = m._viewRebufferDuration + (m.pollTimer.duration * 1000)
-            if m._viewWatchTime <> Invalid AND m._viewWatchTime > 0
-              m._viewRebufferPercentage = m._viewRebufferDuration / m._viewWatchTime
-            end if
-          end if
-        end if
-      end if
-      if NOT m.video.position = m._Flag_lastReportedPosition
-        if m.video.position > m._Flag_lastReportedPosition
-          ' playposition has increased. This is a progress update
-          if m.video.state = "playing"
-            if m._contentPlaybackTime <> Invalid
-              m._contentPlaybackTime = m._contentPlaybackTime + ((m.video.position - m._Flag_lastReportedPosition) * 1000)
-            end if
-          end if
-        end if
-        if m.video.state = "playing"
-          m._Flag_lastReportedPosition = m.video.position
-        end if
-      end if
-    end if
+    m._setBufferingMetrics()
+    m._updateTotalWatchTime()
+
+    m._updateContentPlaybackTime()
+    m._updateLastReportedPositionFlag()
   end function
 
   ' ' //////////////////////////////////////////////////////////////
   ' ' INTERNAL METHODS
   ' ' //////////////////////////////////////////////////////////////
+
+  prototype._updateLastReportedPositionFlag = function() as Void
+    if m.video.position = m._Flag_lastReportedPosition then return
+    if m.video.state <> "playing" AND m.video.state <> "buffering" then return
+    m._Flag_lastReportedPosition = m.video.position
+  end function
+
+  prototype._updateContentPlaybackTime = function() as Void
+    if m._Flag_isInAdBreak = true then return
+    if m.video.position <= m._Flag_lastReportedPosition then return
+    if m.video.state <> "playing" then return
+    if m._contentPlaybackTime = Invalid then return
+
+    m._contentPlaybackTime = m._contentPlaybackTime + ((m.video.position - m._Flag_lastReportedPosition) * 1000)
+  end function
+
+  prototype._updateTotalWatchTime = function() as Void
+    if m.video.state = "paused" then return
+    if m._viewWatchTime = Invalid then return
+    if m._viewStartTimestamp = Invalid then return
+    if m._viewTimeToFirstFrame = Invalid then return
+    if m._viewRebufferDuration = Invalid then return
+    if m._contentPlaybackTime = Invalid then return
+
+    m._viewWatchTime = m._viewTimeToFirstFrame + m._viewRebufferDuration + m._contentPlaybackTime
+  end function
+
+  prototype._setBufferingMetrics = function() as Void
+    if m.video.state <> "buffering" then return
+    if m._Flag_atLeastOnePlayEventForContent <> true then return
+    if m._viewRebufferDuration = Invalid then return
+
+    m._viewRebufferDuration = m._viewRebufferDuration + (m.pollTimer.duration * 1000)
+    if m._viewWatchTime <> Invalid AND m._viewWatchTime > 0
+      m._viewRebufferPercentage = m._viewRebufferDuration / m._viewWatchTime
+    end if
+  end function
 
   prototype._addEventToQueue = function(_event as Object) as Object
     m._logEvent(_event)

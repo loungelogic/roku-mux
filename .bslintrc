@@ -1,5 +1,5 @@
 {
-  "ignore": ["tests", "src/utils/debug", "test/", "resources/", "source/global/utils/debug", "components/analytics/"],
+  "ignore": ["tests","sampleapp_source/SSAI_Lib", "src/utils/debug", "test/", "resources/", "source/global/utils/debug", "components/analytics/"],
   "skip_line": {
     "active": true,
     "params": {}

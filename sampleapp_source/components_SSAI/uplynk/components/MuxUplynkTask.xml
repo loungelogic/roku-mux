@@ -1,0 +1,3 @@
+<component name="MuxUplynkTask" extends="MuxTask">
+  <script type="text/brightscript" uri="./MuxUplynkTask.brs"/>
+</component>

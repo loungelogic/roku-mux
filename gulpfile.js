@@ -47,7 +47,7 @@ gulp.task('deploy', ['closeApp', 'cleanup', 'build_sample_app','build_components
 })
 
 gulp.task('build_sample_app',['cleanup'], function () {
-  return gulp.src(['sampleapp_source/source/**', 'sampleapp_source/components/**', 'sampleapp_source/libs/**','sampleapp_source/images/**', 'sampleapp_source/feed/**', 'sampleapp_source/manifest'], { "base" : "sampleapp_source" })
+  return gulp.src(['sampleapp_source/source/**', 'sampleapp_source/components/**', 'sampleapp_source/libs/**','sampleapp_source/images/**', 'sampleapp_source/feed/**','sampleapp_source/SSAI_Lib/**', 'sampleapp_source/manifest'], { "base" : "sampleapp_source" })
   .pipe(gulp.dest(buildConfig.build_dir_name));
 })
 
@@ -57,11 +57,16 @@ gulp.task('build_components',['cleanup', 'build_sample_app'], function () {
     return gulp.src(['sampleapp_source/components_recycled/**'], { "base" : "sampleapp_source/components_recycled" })
       .pipe(gulp.dest(buildConfig.build_dir_name));
   }
-  else
+  
+  
+  if (buildConfig.sample_app_type == "SSAI_uplynk")
   {
-    return gulp.src(['sampleapp_source/components_reset/**'], { "base" : "sampleapp_source/components_reset" })
+    return gulp.src(['sampleapp_source/components_SSAI/uplynk/**'], { "base" : "sampleapp_source/components_SSAI/uplynk" })
       .pipe(gulp.dest(buildConfig.build_dir_name));
   }
+
+  return gulp.src(['sampleapp_source/components_reset/**'], { "base" : "sampleapp_source/components_reset" })
+    .pipe(gulp.dest(buildConfig.build_dir_name));
 })
 
 gulp.task('build_src',['cleanup', 'build_sample_app', 'build_components'], function () {
