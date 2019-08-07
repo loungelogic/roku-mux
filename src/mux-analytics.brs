@@ -512,9 +512,9 @@ function muxAnalytics() as Object
     if m.video = Invalid then return
 
     m._setBufferingMetrics()
-    m._updateTotalWatchTime()
-
     m._updateContentPlaybackTime()
+
+    m._updateTotalWatchTime()
     m._updateLastReportedPositionFlag()
   end function
 
