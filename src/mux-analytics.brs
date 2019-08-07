@@ -943,32 +943,32 @@ function muxAnalytics() as Object
       props.view_start = FormatJson(m._viewStartTimestamp)
     end if
     if m._viewTimeToFirstFrame <> Invalid AND m._viewTimeToFirstFrame <> 0
-      props.view_time_to_first_frame = m._viewTimeToFirstFrame.toStr()
+      props.view_time_to_first_frame = m._viewTimeToFirstFrame
     end if
     if m._contentPlaybackTime <> Invalid AND m._contentPlaybackTime <> 0
-      props.view_content_playback_time = m._contentPlaybackTime.toStr()
-      props.view_total_content_playback_time = m._contentPlaybackTime.toStr()
+      props.view_content_playback_time = m._contentPlaybackTime
+      props.view_total_content_playback_time = m._contentPlaybackTime
     end if
     if m._viewWatchTime <> Invalid AND m._viewWatchTime <> 0
-      props.view_watch_time = m._viewWatchTime.toStr()
+      props.view_watch_time = m._viewWatchTime
     end if
     if m._viewRebufferCount <> Invalid
       props.view_rebuffer_count = m._viewRebufferCount.toStr()
     end if
     if m._viewRebufferDuration <> Invalid
-      props.view_rebuffer_duration = m._viewRebufferDuration.toStr()
+      props.view_rebuffer_duration = m._viewRebufferDuration
     end if
     if m._viewRebufferPercentage <> Invalid
-      props.view_rebuffer_percentage = m._viewRebufferPercentage.toStr()
+      props.view_rebuffer_percentage = m._viewRebufferPercentage
     end if
     if m._viewRebufferFrequency! <> Invalid
-      props.view_rebuffer_frequency = m._viewRebufferFrequency!.toStr()
+      props.view_rebuffer_frequency = m._viewRebufferFrequency!
     end if
     if m._viewSeekCount <> Invalid
       props.view_seek_count = m._viewSeekCount.toStr()
     end if
     if m._viewSeekDuration <> Invalid
-      props.view_seek_duration = m._viewSeekDuration.toStr()
+      props.view_seek_duration = m._viewSeekDuration
     end if
     if m._viewAdPlayedCount <> Invalid
       props.view_ad_played_count = m._viewAdPlayedCount.toStr()
